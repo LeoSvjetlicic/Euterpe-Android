@@ -1,8 +1,15 @@
 package ls.diplomski.euterpe.ui.camerascreen
 
+import android.Manifest
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -38,31 +45,41 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavController
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import kotlinx.io.IOException
+import ls.diplomski.euterpe.ui.DETAILS_SCREEN_BASE_ROUTE
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CameraScreen() {
+fun CameraScreen(
+    navController: NavController
+) {
     val viewModel: CameraViewModel = koinViewModel()
     val uploadState by viewModel.uploadState.collectAsState()
 
     val cameraPermissionState = rememberPermissionState(
-        android.Manifest.permission.CAMERA
+        Manifest.permission.CAMERA
     )
 
     when {
         cameraPermissionState.status.isGranted -> {
             CameraContent(
                 uploadState = uploadState,
-                onImageCaptured = { imageFile ->
-                    viewModel.uploadMusicSheet(imageFile)
-                }
+                cameraViewModel = viewModel,
+                navController = navController
             )
         }
 
@@ -82,13 +99,100 @@ fun CameraScreen() {
     }
 }
 
+fun copyUriToFile(context: Context, uri: Uri, fileName: String): File {
+    val inputStream = context.contentResolver.openInputStream(uri)
+        ?: throw IllegalArgumentException("Unable to open input stream from URI")
+
+    val tempFile = File(context.cacheDir, fileName)
+    tempFile.outputStream().use { outputStream ->
+        inputStream.copyTo(outputStream)
+    }
+    inputStream.close()
+    return tempFile
+}
+
+fun fixImageOrientationAndSaveAsFile(context: Context, inputFile: File): File {
+    // Load bitmap from the input file
+    val bitmap = BitmapFactory.decodeFile(inputFile.absolutePath) ?: return inputFile
+
+    // Read EXIF orientation info
+    val exif = try {
+        ExifInterface(inputFile.absolutePath)
+    } catch (e: IOException) {
+        e.printStackTrace()
+        return inputFile // Return original file if EXIF reading fails
+    }
+
+    val orientation = exif.getAttributeInt(
+        ExifInterface.TAG_ORIENTATION,
+        ExifInterface.ORIENTATION_NORMAL
+    )
+
+    // Determine rotation degrees
+    val rotationDegrees = when (orientation) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+        ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+        ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+        else -> 0f
+    }
+
+    // Create rotated bitmap if rotation is needed
+    val rotatedBitmap = if (rotationDegrees != 0f) {
+        val matrix = Matrix().apply { postRotate(rotationDegrees) }
+        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    } else {
+        bitmap
+    }
+
+    // Save the rotated bitmap to a new file
+    val rotatedFile = File(context.cacheDir, "rotated_${System.currentTimeMillis()}.png")
+    rotatedFile.outputStream().use { out ->
+        rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+    }
+
+    // Clean up bitmaps to avoid memory leaks
+    if (rotatedBitmap != bitmap) {
+        bitmap.recycle()
+    }
+
+    return rotatedFile
+}
+
+
 @Composable
 fun CameraContent(
     uploadState: UploadState,
-    onImageCaptured: (File) -> Unit
+    cameraViewModel: CameraViewModel,
+    navController: NavController
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val cropLauncher = rememberLauncherForActivityResult(CropImageContract()) { result ->
+        if (result.isSuccessful && result.uriContent != null) {
+            val croppedUri = result.uriContent!!
+
+            // Copy the cropped URI to a temp file
+            val croppedFile = copyUriToFile(
+                context,
+                croppedUri,
+                "cropped_sheet_${System.currentTimeMillis()}.png"
+            )
+
+            // Apply EXIF rotation correction and get the final rotated file
+            val rotatedFile = fixImageOrientationAndSaveAsFile(context, croppedFile)
+
+            // Upload the properly oriented file
+            cameraViewModel.uploadMusicSheet(rotatedFile, onSuccessfulSave = { midiPath ->
+                val permanentMidiFile = cameraViewModel.saveMidiPermanently(File(midiPath), context)
+                val encodedPath = Uri.encode(permanentMidiFile.absolutePath)
+                navController.navigate("$DETAILS_SCREEN_BASE_ROUTE/$encodedPath")
+            })
+
+        } else {
+            Log.e("Crop", "Crop failed: ${result.error}")
+        }
+    }
+
 
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
     val previewView = remember { PreviewView(context) }
@@ -98,7 +202,7 @@ fun CameraContent(
         val cameraProvider = ProcessCameraProvider.getInstance(context).get()
 
         val preview = Preview.Builder().build().also {
-            it.setSurfaceProvider(previewView.surfaceProvider)
+            it.surfaceProvider = previewView.surfaceProvider
         }
 
         imageCapture = ImageCapture.Builder().build()
@@ -124,7 +228,6 @@ fun CameraContent(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Upload progress overlay
         if (uploadState.isLoading) {
             Box(
                 modifier = Modifier
@@ -146,27 +249,24 @@ fun CameraContent(
             }
         }
 
-        // Success message
         if (uploadState.isComplete) {
             LaunchedEffect(uploadState.isComplete) {
-                // Show success toast or snackbar
                 Toast.makeText(context, "MIDI file created and playing!", Toast.LENGTH_LONG).show()
             }
         }
 
-        // Error message
         uploadState.error?.let { error ->
             LaunchedEffect(error) {
                 Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
             }
         }
 
-        // Capture button
         if (!uploadState.isLoading) {
             FloatingActionButton(
                 onClick = {
+                    // *** Capture image and start crop flow ***
                     imageCapture?.let { capture ->
-                        captureImage(capture, context, onImageCaptured)
+                        captureImage(capture, context, cropLauncher)
                     }
                 },
                 modifier = Modifier
@@ -181,6 +281,74 @@ fun CameraContent(
         }
     }
 }
+
+// *** Modified capture to return Uri and start uCrop ***
+private fun captureImage(
+    imageCapture: ImageCapture,
+    context: Context,
+    cropLauncher: ActivityResultLauncher<CropImageContractOptions>
+) {
+    val photoFile = File(context.externalCacheDir, "sheet_${System.currentTimeMillis()}.png")
+    val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+    imageCapture.takePicture(
+        outputOptions,
+        ContextCompat.getMainExecutor(context),
+        object : ImageCapture.OnImageSavedCallback {
+            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    photoFile
+                )
+                startCrop(uri, cropLauncher)
+            }
+
+            override fun onError(exception: ImageCaptureException) {
+                Log.e("Camera", "Capture failed", exception)
+            }
+        }
+    )
+}
+
+// *** Start uCrop activity ***
+private fun startCrop(
+    uri: Uri,
+    cropLauncher: ActivityResultLauncher<CropImageContractOptions>,
+) {
+    cropLauncher.launch(
+        CropImageContractOptions(
+            uri = uri,
+            cropImageOptions = CropImageOptions(
+                guidelines = CropImageView.Guidelines.ON,
+                outputCompressFormat = Bitmap.CompressFormat.PNG,
+                showCropOverlay = true
+            )
+        )
+    )
+}
+
+
+// *** Fix orientation & scale image ***
+//fun fixImageOrientationAndSize(context: Context, uri: Uri): File {
+//    val inputStream = context.contentResolver.openInputStream(uri)
+//    val bitmap = BitmapFactory.decodeStream(inputStream)
+//    inputStream?.close()
+//
+//    if (bitmap == null) return File(uri.path ?: "")
+//
+//    val rotatedBitmap = if (bitmap.height > bitmap.width) {
+//        val matrix = Matrix().apply { postRotate(90f) }
+//        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+//    } else bitmap
+//
+//    val fixedFile = File(context.cacheDir, "fixed_${System.currentTimeMillis()}.png")
+//    FileOutputStream(fixedFile).use { out ->
+//        rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+//    }
+//
+//    return fixedFile
+//}
 
 @Composable
 fun PermissionRationale(onRequestPermission: () -> Unit) {
@@ -201,31 +369,4 @@ fun PermissionRationale(onRequestPermission: () -> Unit) {
             Text("Grant Permission")
         }
     }
-}
-
-private fun captureImage(
-    imageCapture: ImageCapture,
-    context: Context,
-    onImageCaptured: (File) -> Unit
-) {
-    val photoFile = File(
-        context.externalCacheDir,
-        "music_sheet_${System.currentTimeMillis()}.jpg"
-    )
-
-    val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-
-    imageCapture.takePicture(
-        outputOptions,
-        ContextCompat.getMainExecutor(context),
-        object : ImageCapture.OnImageSavedCallback {
-            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                onImageCaptured(photoFile)
-            }
-
-            override fun onError(exception: ImageCaptureException) {
-                Log.e("CameraScreen", "Photo capture failed", exception)
-            }
-        }
-    )
 }

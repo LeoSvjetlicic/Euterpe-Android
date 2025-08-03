@@ -1,6 +1,6 @@
 package ls.diplomski.euterpe.ui.camerascreen
 
-import android.util.Log
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,25 +19,26 @@ class CameraViewModel(
     private val _uploadState = MutableStateFlow(UploadState())
     val uploadState: StateFlow<UploadState> = _uploadState.asStateFlow()
 
-    fun uploadMusicSheet(imageFile: File) {
+    fun uploadMusicSheet(imageFile: File, onSuccessfulSave: (String) -> Unit) {
         viewModelScope.launch {
             repository.uploadAndProcessMusicSheet(imageFile)
                 .collect { state ->
                     _uploadState.value = state
 
-                    // Auto-play MIDI when upload is complete
                     if (state.isComplete && state.midiFile != null) {
-                        playMidiFile(state.midiFile)
+                        onSuccessfulSave(state.midiFile.path)
                     }
                 }
         }
     }
 
-    private fun playMidiFile(file: File) {
-        mediaPlayerHelper.playMidi(file) {
-            // Playback completed
-            Log.d("CameraViewModel", "MIDI playback completed")
-        }
+    fun saveMidiPermanently(tempMidiFile: File, context: Context): File {
+        val midiDir = File(context.getExternalFilesDir(null), "midi_files")
+        if (!midiDir.exists()) midiDir.mkdirs()
+
+        val permanentMidiFile = File(midiDir, "midi_${System.currentTimeMillis()}.mid")
+        tempMidiFile.copyTo(permanentMidiFile, overwrite = true)
+        return permanentMidiFile
     }
 
     override fun onCleared() {

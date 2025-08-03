@@ -14,11 +14,11 @@ class MusicSnippetsApiServiceImpl(
 
     override suspend fun uploadMusicSheet(imageBytes: ByteArray): HttpResponse {
         return httpClient.submitFormWithBinaryData(
-            url = "https://your-api-endpoint.com/upload-sheet",
+            url = "http://172.24.249.129:3000/convert",
             formData = formData {
-                append("file", imageBytes, Headers.build {
-                    append(HttpHeaders.ContentType, "image/jpeg")
-                    append(HttpHeaders.ContentDisposition, "filename=music_sheet.jpg")
+                append("image", imageBytes, Headers.build {
+                    append(HttpHeaders.ContentType, "image/png")
+                    append(HttpHeaders.ContentDisposition, "filename=music_sheet.png")
                 })
             }
         )

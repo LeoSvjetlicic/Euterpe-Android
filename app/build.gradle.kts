@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.exifinterface)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,30 +64,28 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.android)
     implementation(libs.androidx.navigation.compose)
-    val camerax_version = "1.3.0"
-    implementation("androidx.camera:camera-core:$camerax_version")
-    implementation("androidx.camera:camera-camera2:$camerax_version")
-    implementation("androidx.camera:camera-lifecycle:$camerax_version")
-    implementation("androidx.camera:camera-view:$camerax_version")
+    implementation(libs.androidx.camera.core.v130)
+    implementation(libs.androidx.camera.camera2.v130)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
     dependencies {
         // CameraX
-        val camerax_version = "1.3.0"
-        implementation("androidx.camera:camera-core:$camerax_version")
-        implementation("androidx.camera:camera-camera2:$camerax_version")
-        implementation("androidx.camera:camera-lifecycle:$camerax_version")
-        implementation("androidx.camera:camera-view:$camerax_version")
+        implementation(libs.androidx.camera.core.v130)
+        implementation(libs.androidx.camera.camera2)
+        implementation(libs.androidx.camera.lifecycle)
+        implementation(libs.androidx.camera.view.v130)
 
         // Permissions handling
-        implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
+        implementation(libs.accompanist.permissions)
 
         // Ktor Client
-        implementation("io.ktor:ktor-client-android:2.3.7")
-        implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
-        implementation("io.ktor:ktor-serialization-gson:2.3.7")
-        implementation("io.ktor:ktor-client-logging:2.3.7")
+        implementation(libs.ktor.client.android.v237)
+        implementation(libs.ktor.client.content.negotiation)
+        implementation(libs.ktor.serialization.gson)
+        implementation(libs.ktor.client.logging)
 
         // Activity Compose
-        implementation("androidx.activity:activity-compose:1.8.2")
+        implementation(libs.androidx.activity.compose.v182)
+        implementation(libs.android.image.cropper)
     }
-
 }

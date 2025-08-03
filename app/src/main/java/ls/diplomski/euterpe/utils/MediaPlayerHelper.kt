@@ -1,16 +1,14 @@
 package ls.diplomski.euterpe.utils
 
-import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
 import java.io.File
 
-class MediaPlayerHelper(private val context: Context) {
+class MediaPlayerHelper {
     private var mediaPlayer: MediaPlayer? = null
 
     fun playMidi(file: File, onComplete: () -> Unit) {
         release()
-
         try {
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(file.absolutePath)
