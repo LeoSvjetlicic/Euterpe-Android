@@ -10,11 +10,8 @@ import ls.diplomski.euterpe.data.impl.MusicSnippetRemoteRepositoryImpl
 import ls.diplomski.euterpe.data.impl.MusicSnippetsApiServiceImpl
 import ls.diplomski.euterpe.domain.MusicSnippetRemoteRepository
 import ls.diplomski.euterpe.domain.api.MusicSnippetsApiService
-import ls.diplomski.euterpe.ui.camerascreen.CameraViewModel
 import ls.diplomski.euterpe.utils.MediaPlayerHelper
-import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -39,13 +36,9 @@ object KoinNetworkModule {
     }
 
     private val helperModule = module {
-        single { MediaPlayerHelper(androidContext()) }
+        singleOf(::MediaPlayerHelper)
     }
 
-    private val viewModelModule = module {
-        viewModelOf(::CameraViewModel)
-    }
-
-    val appModules = listOf(networkModule, repositoryModule, helperModule, viewModelModule)
+    val appModules = listOf(networkModule, repositoryModule, helperModule)
 
 }

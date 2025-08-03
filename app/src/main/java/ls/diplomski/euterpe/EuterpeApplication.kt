@@ -2,8 +2,8 @@ package ls.diplomski.euterpe
 
 import android.app.Application
 import ls.diplomski.euterpe.di.KoinMappers
-import ls.diplomski.euterpe.di.KoinMockData
 import ls.diplomski.euterpe.di.KoinNetworkModule
+import ls.diplomski.euterpe.di.KoinRepository
 import ls.diplomski.euterpe.di.KoinUseCases
 import ls.diplomski.euterpe.di.KoinUtilsClasses
 import ls.diplomski.euterpe.di.KoinViewModels
@@ -20,7 +20,7 @@ class EuterpeApplication : Application() {
             modules(
                 KoinViewModels.module,
                 KoinUtilsClasses.module,
-                KoinMockData.module,
+                KoinRepository.module,
                 KoinMappers.module,
                 KoinUseCases.module,
             )

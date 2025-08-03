@@ -4,6 +4,6 @@ import ls.diplomski.euterpe.data.MusicSnippet
 
 interface MusicSnippetsRepository {
     suspend fun fetchMusicSnippets(): List<MusicSnippet>
-    suspend fun fetchMusicSnippetById(): MusicSnippet
+    suspend fun fetchMusicSnippetById(name: String): MusicSnippet?
 
 }

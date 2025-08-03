@@ -12,7 +12,7 @@ class MusicSnippetToViewStateMapperImpl : MusicSnippetToViewStateMapper {
             snippetName = musicSnippet.name,
             isSnippetPlaying = false,
             dateCreated = LocalDateTimeFormatter.toFormattedString(musicSnippet.dateCreated),
-            pathToMIDIFIle = musicSnippet.pathToMIDIFIle
+            filePath = musicSnippet.filePath
         )
 
 }

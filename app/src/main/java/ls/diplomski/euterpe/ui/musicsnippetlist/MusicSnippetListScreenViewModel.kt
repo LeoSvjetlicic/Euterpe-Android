@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ls.diplomski.euterpe.domain.FetchMusicSnippetsUseCase
 import ls.diplomski.euterpe.utils.MediaPlayerHelper
+import java.io.File
 
 class MusicSnippetListScreenViewModel(
     private val mediaPlayerHelper: MediaPlayerHelper,
@@ -19,7 +20,6 @@ class MusicSnippetListScreenViewModel(
     init {
         viewModelScope.launch {
             val result = fetchMusicSnippetsUseCase()
-//            TODO - check if it is success otherwise show error
             _viewState.emit(
                 MusicSnippetListScreenViewState(
                     result
@@ -31,12 +31,12 @@ class MusicSnippetListScreenViewModel(
     fun playSnippet(id: String) {
         mediaPlayerHelper.release()
         setAllIsPlayingValues(id)
-//        if (_viewState.value.items.find { it.isSnippetPlaying } != null) {
-//            mediaPlayerHelper.playMidi() {
-
-//                setAllIsPlayingValues()
-//            }
-//        }
+        val selectedElement = _viewState.value.items.find { it.isSnippetPlaying }
+        if (selectedElement != null) {
+            mediaPlayerHelper.playMidi(File(selectedElement.filePath)) {
+                setAllIsPlayingValues()
+            }
+        }
     }
 
     private fun setAllIsPlayingValues(id: String = "-1") {

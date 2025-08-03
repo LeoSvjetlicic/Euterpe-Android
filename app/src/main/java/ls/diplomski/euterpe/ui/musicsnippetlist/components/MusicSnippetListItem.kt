@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 data class MusicSnippetListItemViewState(
     val id: String,
     val snippetName: String,
-    val pathToMIDIFIle: String,
+    val filePath: String,
     val isSnippetPlaying: Boolean,
     val dateCreated: String,
 )

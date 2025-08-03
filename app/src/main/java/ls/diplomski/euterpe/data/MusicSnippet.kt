@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 data class MusicSnippet(
     val id: String,
-    val pathToMIDIFIle: String,
+    val filePath: String,
     val name: String,
     val dateCreated: LocalDate,
 )
