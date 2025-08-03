@@ -6,11 +6,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import ls.diplomski.euterpe.ui.camerascreen.CameraScreen
 import ls.diplomski.euterpe.ui.musicsnippetlist.MusicSnippetListScreen
 import ls.diplomski.euterpe.ui.theme.EuterpeTheme
 
@@ -20,8 +30,31 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val showFAB by remember {
+                derivedStateOf {
+                    when (navBackStackEntry?.destination?.route) {
+                        MUSIC_SNIPPET_LIST_SCREEN_ROUTE -> true
+                        else -> false
+                    }
+                }
+            }
             EuterpeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    floatingActionButton = {
+                        if (showFAB) {
+                            FloatingActionButton(
+                                onClick = {
+                                    navController.navigate(CAMERA_SCREEN_ROUTE)
+                                }
+                            ) {
+                                Icon(imageVector = Icons.Default.Add, null)
+                            }
+                        }
+                    },
+                    floatingActionButtonPosition = FabPosition.Center
+                ) { innerPadding ->
                     NavHost(
                         modifier = Modifier.padding(innerPadding),
                         navController = navController,
@@ -29,8 +62,10 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable(route = MUSIC_SNIPPET_LIST_SCREEN_ROUTE) {
                             MusicSnippetListScreen {
-
                             }
+                        }
+                        composable(route = CAMERA_SCREEN_ROUTE) {
+                            CameraScreen()
                         }
                     }
                 }

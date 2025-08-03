@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ls.diplomski.euterpe.R
 import ls.diplomski.euterpe.domain.FetchMusicSnippetsUseCase
 import ls.diplomski.euterpe.utils.MediaPlayerHelper
 
@@ -32,11 +31,12 @@ class MusicSnippetListScreenViewModel(
     fun playSnippet(id: String) {
         mediaPlayerHelper.release()
         setAllIsPlayingValues(id)
-        if (_viewState.value.items.find { it.isSnippetPlaying } != null) {
-            mediaPlayerHelper.playMidi(R.raw.converted123) {
-                setAllIsPlayingValues()
-            }
-        }
+//        if (_viewState.value.items.find { it.isSnippetPlaying } != null) {
+//            mediaPlayerHelper.playMidi() {
+
+//                setAllIsPlayingValues()
+//            }
+//        }
     }
 
     private fun setAllIsPlayingValues(id: String = "-1") {

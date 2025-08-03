@@ -1,5 +1,6 @@
 [versions]
 agp = "8.11.1"
+cameraCore = "1.4.2"
 koin = "4.1.0"
 kotlin = "2.2.0"
 coreKtx = "1.16.0"
@@ -15,6 +16,11 @@ mididriver = "v1.24"
 navigationCompose = "2.9.3"
 
 [libraries]
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
+androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraCore" }
+androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraCore" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCore" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCore" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -37,7 +43,6 @@ koin-navigation = { group = "io.insert-koin", name = "koin-androidx-navigation",
 koin-workmanager = { group = "io.insert-koin", name = "koin-androidx-workmanager", version.ref = "koin" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientAndroid" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
-mididriver = { module = "com.github.billthefarmer:mididriver", version.ref = "mididriver" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
