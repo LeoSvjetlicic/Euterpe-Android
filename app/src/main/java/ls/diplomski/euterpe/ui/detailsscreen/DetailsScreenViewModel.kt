@@ -15,4 +15,8 @@ class DetailsScreenViewModel(
             Log.d("CameraViewModel", "MIDI playback completed")
         }
     }
+
+    fun stopPlayingSnippet() {
+        mediaPlayerHelper.release()
+    }
 }

@@ -17,7 +17,7 @@ class MusicSnippetListScreenViewModel(
     private val _viewState = MutableStateFlow(MusicSnippetListScreenViewState(emptyList()))
     val viewState = _viewState.asStateFlow()
 
-    init {
+    fun reloadMusicalSnippets() {
         viewModelScope.launch {
             val result = fetchMusicSnippetsUseCase()
             _viewState.emit(
@@ -25,6 +25,15 @@ class MusicSnippetListScreenViewModel(
                     result
                 )
             )
+        }
+    }
+
+    fun deleteMidiFileAtPath(filePath: String) {
+        val file = File(filePath)
+        if (file.exists() && file.isFile) {
+            file.delete()
+            mediaPlayerHelper.release()
+            reloadMusicalSnippets()
         }
     }
 

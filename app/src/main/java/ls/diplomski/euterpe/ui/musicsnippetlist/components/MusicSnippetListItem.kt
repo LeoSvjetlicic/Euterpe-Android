@@ -1,22 +1,40 @@
 package ls.diplomski.euterpe.ui.musicsnippetlist.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color.Companion.Red
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.wear.compose.material.ExperimentalWearMaterialApi
+import androidx.wear.compose.material.FractionalThreshold
+import androidx.wear.compose.material.rememberSwipeableState
+import androidx.wear.compose.material.swipeable
+import kotlin.math.roundToInt
 
 data class MusicSnippetListItemViewState(
     val id: String,
@@ -26,37 +44,67 @@ data class MusicSnippetListItemViewState(
     val dateCreated: String,
 )
 
+@OptIn(ExperimentalWearMaterialApi::class)
 @Composable
 fun MusicSnippetListItem(
     viewState: MusicSnippetListItemViewState,
+    onDeleteClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     onPlayStopButtonClick: (String) -> Unit
 ) {
-    Card(
-        modifier = modifier,
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 12.dp
-        )
-    ) {
-        Row(Modifier.padding(12.dp)) {
-            Text(
-                text = viewState.snippetName, modifier = Modifier.weight(1f),
-                fontSize = 24.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+
+    val swipeableState = rememberSwipeableState(0)
+    val sizePx = with(LocalDensity.current) { -40.dp.toPx() }
+    val anchors = mapOf(0f to 0, sizePx to 1) // Maps anchor points (in px) to states
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .swipeable(
+                state = swipeableState,
+                anchors = anchors,
+                thresholds = { _, _ -> FractionalThreshold(0.3f) },
+                orientation = Orientation.Horizontal
             )
-            Spacer(Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                PlayPauseButton(
-                    modifier = Modifier.size(24.dp),
-                    isSnippetPlaying = viewState.isSnippetPlaying,
-                    onClick = { onPlayStopButtonClick(viewState.id) }
-                )
-                Spacer(Modifier.height(12.dp))
+    ) {
+        Icon(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 6.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { onDeleteClick(viewState.filePath) },
+            imageVector = Icons.Filled.Delete,
+            contentDescription = "",
+            tint = Red
+        )
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
+            elevation = CardDefaults.elevatedCardElevation(
+                defaultElevation = 12.dp
+            )
+        ) {
+
+            Row(Modifier.padding(12.dp)) {
                 Text(
-                    text = viewState.dateCreated,
-                    fontSize = 12.sp
+                    text = viewState.snippetName, modifier = Modifier.weight(1f),
+                    fontSize = 24.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
+                Spacer(Modifier.width(8.dp))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    PlayPauseButton(
+                        modifier = Modifier.size(24.dp),
+                        isSnippetPlaying = viewState.isSnippetPlaying,
+                        onClick = { onPlayStopButtonClick(viewState.id) }
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = viewState.dateCreated,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }
@@ -74,6 +122,7 @@ private fun MusicSnippetListItemPreview() {
                 false,
                 "2.8.2025."
             ),
+            onDeleteClick = {},
             onPlayStopButtonClick = {})
         MusicSnippetListItem(
             MusicSnippetListItemViewState(
@@ -83,6 +132,7 @@ private fun MusicSnippetListItemPreview() {
                 true,
                 "2.8.2025."
             ),
+            onDeleteClick = {},
             onPlayStopButtonClick = {})
     }
 }

@@ -66,7 +66,10 @@ class MainActivity : ComponentActivity() {
                         startDestination = MUSIC_SNIPPET_LIST_SCREEN_ROUTE
                     ) {
                         composable(route = MUSIC_SNIPPET_LIST_SCREEN_ROUTE) {
-                            MusicSnippetListScreen {}
+                            MusicSnippetListScreen {
+                                val encodedPath = Uri.encode(it)
+                                navController.navigate("$DETAILS_SCREEN_BASE_ROUTE/$encodedPath")
+                            }
                         }
                         composable(route = CAMERA_SCREEN_ROUTE) {
                             CameraScreen(
