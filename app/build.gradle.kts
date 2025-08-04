@@ -69,24 +69,25 @@ dependencies {
     implementation(libs.androidx.camera.camera2.v130)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
-    dependencies {
-        // CameraX
-        implementation(libs.androidx.camera.core.v130)
-        implementation(libs.androidx.camera.camera2)
-        implementation(libs.androidx.camera.lifecycle)
-        implementation(libs.androidx.camera.view.v130)
+    // CameraX
+    implementation(libs.androidx.camera.core.v130)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view.v130)
 
-        // Permissions handling
-        implementation(libs.accompanist.permissions)
+    // Permissions handling
+    implementation(libs.accompanist.permissions)
 
-        // Ktor Client
-        implementation(libs.ktor.client.android.v237)
-        implementation(libs.ktor.client.content.negotiation)
-        implementation(libs.ktor.serialization.gson)
-        implementation(libs.ktor.client.logging)
+    // Ktor Client
+    implementation(libs.ktor.client.android.v237)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.gson)
+    implementation(libs.ktor.client.logging)
 
-        // Activity Compose
-        implementation(libs.androidx.activity.compose.v182)
-        implementation(libs.android.image.cropper)
-    }
+    // Activity Compose
+    implementation(libs.androidx.activity.compose.v182)
+    implementation(libs.android.image.cropper)
+    implementation(libs.ktmidi.android)
+    // For coroutines
+    implementation(libs.kotlinx.coroutines.android)
 }
