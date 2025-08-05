@@ -3,6 +3,7 @@ package ls.diplomski.euterpe.ui.detailsscreen
 import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,9 +40,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,14 +62,18 @@ import java.io.File
 
 @SuppressLint("DefaultLocale", "UnusedBoxWithConstraintsScope")
 @Composable
-fun DetailsScreen(midiFilePath: String) {
+fun DetailsScreen(
+    midiFilePath: String
+) {
     val viewModel: DetailsScreenViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val orientation = LocalConfiguration.current.orientation
+    var localMidiFilePath by rememberSaveable { mutableStateOf(midiFilePath) }
 
     // Auto-analyze the MIDI file when screen loads
-    LaunchedEffect(midiFilePath) {
-        viewModel.analyzeMidiFile(midiFilePath)
+    LaunchedEffect(localMidiFilePath) {
+        viewModel.analyzeMidiFile(localMidiFilePath)
     }
 
     // Handle lifecycle events
@@ -105,7 +112,7 @@ fun DetailsScreen(midiFilePath: String) {
                         if (uiState.isPlaying) {
                             viewModel.stopPlayingSnippet()
                         } else {
-                            viewModel.playMidiFile(midiFilePath)
+                            viewModel.playMidiFile(localMidiFilePath)
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -130,7 +137,6 @@ fun DetailsScreen(midiFilePath: String) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Piano keyboard that fills remaining space
                 BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -144,7 +150,6 @@ fun DetailsScreen(midiFilePath: String) {
                     )
                 }
 
-                // Active notes display
                 val notesToDisplay = if (uiState.activeNotes.isNotEmpty()) {
                     "Playing: ${uiState.activeNotes.joinToString { getNoteNameFromMidi(it) }}"
                 } else {
@@ -162,48 +167,51 @@ fun DetailsScreen(midiFilePath: String) {
 
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
+                .fillMaxSize()
                 .padding(16.dp)
         ) {
-            when {
-                uiState.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Analyzing MIDI file...")
-                        }
-                    }
-                }
-
-                uiState.error != null -> {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f))
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Analysis Error",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.Red
-                            )
-                            uiState.error?.let {
-                                Text(text = it)
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            TextButton(onClick = { viewModel.clearError() }) {
-                                Text("Dismiss")
+            if (orientation == Orientation.Vertical.ordinal + 1) {
+                when {
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Analyzing MIDI file...")
                             }
                         }
                     }
-                }
 
-                uiState.analysisResult != null -> {
-                    MidiAnalysisContent(uiState.analysisResult!!, midiFilePath)
+                    uiState.error != null -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f))
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Analysis Error",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Red
+                                )
+                                uiState.error?.let {
+                                    Text(text = it)
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                TextButton(onClick = { viewModel.clearError() }) {
+                                    Text("Dismiss")
+                                }
+                            }
+                        }
+                    }
+
+                    uiState.analysisResult != null -> {
+                        MidiAnalysisContent(uiState.analysisResult!!, midiFilePath) {
+                            localMidiFilePath = it
+                        }
+                    }
                 }
             }
         }
@@ -218,7 +226,6 @@ fun PianoKeyboard(
     availableWidth: Dp,
     availableHeight: Dp
 ) {
-    // Calculate key sizes based on available dimensions
     val totalWhiteKeys = octaveCount * 7
     val whiteKeyWidth = availableWidth / totalWhiteKeys
     val whiteKeyHeight =
@@ -232,7 +239,6 @@ fun PianoKeyboard(
             .height(whiteKeyHeight),
         contentAlignment = Alignment.Center
     ) {
-        // Draw white keys first
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -247,7 +253,6 @@ fun PianoKeyboard(
             }
         }
 
-        // Draw black keys on top
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -393,7 +398,11 @@ fun PianoKey(
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun MidiAnalysisContent(result: MidiAnalysisResult, filePath: String) {
+fun MidiAnalysisContent(
+    result: MidiAnalysisResult,
+    filePath: String,
+    onFileRename: (String) -> Unit
+) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -433,6 +442,7 @@ fun MidiAnalysisContent(result: MidiAnalysisResult, filePath: String) {
                                         if (success) {
                                             initialName.value = newName.value
                                             isEditing.value = false
+                                            onFileRename(newFile.path)
                                         }
                                     } else {
                                         isEditing.value = false

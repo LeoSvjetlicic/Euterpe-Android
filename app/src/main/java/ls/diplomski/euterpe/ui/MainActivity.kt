@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,6 +18,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -44,12 +46,12 @@ class MainActivity : ComponentActivity() {
                         navBackStackEntry?.destination?.route == MUSIC_SNIPPET_LIST_SCREEN_ROUTE
                     }
                 }
-
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     floatingActionButton = {
                         if (showFAB) {
                             FloatingActionButton(
+                                modifier = Modifier.offset(y = (-16).dp),
                                 onClick = {
                                     navController.navigate(CAMERA_SCREEN_ROUTE)
                                 }

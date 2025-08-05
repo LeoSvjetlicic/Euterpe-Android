@@ -48,6 +48,11 @@ class MusicSnippetListScreenViewModel(
         }
     }
 
+    fun stopPlayingSnippet() {
+        mediaPlayerHelper.release()
+        setAllIsPlayingValues()
+    }
+
     private fun setAllIsPlayingValues(id: String = "-1") {
         _viewState.update {
             it.copy(items = it.items.map { musicSnippet ->
