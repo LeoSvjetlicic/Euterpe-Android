@@ -189,7 +189,7 @@ fun DetailsScreen(
                     }
 
                     uiState.analysisResult != null -> {
-                        MidiAnalysisContent(uiState.analysisResult!!, midiFilePath) {
+                        MidiAnalysisContent(uiState.analysisResult!!, localMidiFilePath) {
                             localMidiFilePath = it
                         }
                     }

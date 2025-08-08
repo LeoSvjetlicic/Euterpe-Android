@@ -7,6 +7,7 @@ cameraCamera2 = "1.4.2"
 cameraCore = "1.4.2"
 cameraCoreVersion = "1.4.2"
 cameraView = "1.4.2"
+exifinterfaceVersion = "1.3.6"
 koin = "4.1.0"
 kotlin = "2.2.0"
 coreKtx = "1.16.0"
@@ -24,6 +25,7 @@ ktorSerializationGson = "3.2.3"
 lifecycleRuntimeKtx = "2.9.2"
 activityCompose = "1.10.1"
 composeBom = "2025.07.00"
+media3Common = "1.8.0"
 navigationCompose = "2.9.3"
 exifinterface = "1.4.1"
 composeMaterial = "1.4.1"
@@ -41,6 +43,9 @@ androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCore" }
 androidx-camera-view-v130 = { module = "androidx.camera:camera-view", version.ref = "cameraView" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-exifinterface-v136 = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterfaceVersion" }
+androidx-media3-common = { module = "androidx.media3:media3-common", version.ref = "media3Common" }
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Common" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

@@ -9,7 +9,7 @@ class MusicSnippetToViewStateMapperImpl : MusicSnippetToViewStateMapper {
     override fun toMusicSnippetViewState(musicSnippet: MusicSnippet): MusicSnippetListItemViewState =
         MusicSnippetListItemViewState(
             id = musicSnippet.id,
-            snippetName = musicSnippet.name,
+            snippetName = musicSnippet.name.split(".").firstOrNull() ?: "Error loading name",
             isSnippetPlaying = false,
             dateCreated = LocalDateTimeFormatter.toFormattedString(musicSnippet.dateCreated),
             filePath = musicSnippet.filePath

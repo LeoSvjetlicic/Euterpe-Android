@@ -90,4 +90,9 @@ dependencies {
     implementation(libs.ktmidi.android)
     // For coroutines
     implementation(libs.kotlinx.coroutines.android)
+    // ExifInterface
+    implementation(libs.androidx.exifinterface.v136)
+// Media3 (Bitmap decoder if needed)
+    implementation(libs.androidx.media3.common)
+    implementation(libs.androidx.media3.exoplayer)
 }

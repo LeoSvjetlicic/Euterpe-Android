@@ -21,8 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,9 +46,9 @@ fun MidiAnalysisContent(
     ) {
         item {
             val originalFile = File(filePath)
-            val initialName = remember { mutableStateOf(originalFile.nameWithoutExtension) }
-            val isEditing = remember { mutableStateOf(false) }
-            val newName = remember { mutableStateOf(initialName.value) }
+            var initialName by remember { mutableStateOf(originalFile.nameWithoutExtension) }
+            var isEditing by remember { mutableStateOf(false) }
+            var newName by remember { mutableStateOf(initialName) }
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -57,7 +59,7 @@ fun MidiAnalysisContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        if (isEditing.value) {
+                        if (isEditing) {
                             androidx.compose.material3.TextField(
                                 colors = TextFieldDefaults.colors(
                                     unfocusedIndicatorColor = Color.Transparent,
@@ -65,23 +67,23 @@ fun MidiAnalysisContent(
                                     focusedIndicatorColor = Color.Transparent,
                                     errorIndicatorColor = Color.Transparent,
                                 ),
-                                value = newName.value,
-                                onValueChange = { newName.value = it },
+                                value = newName,
+                                onValueChange = { newName = it },
                                 singleLine = true,
                                 modifier = Modifier.weight(1f)
                             )
                             TextButton(onClick = {
                                 originalFile.parentFile?.let { parent ->
-                                    if (initialName.value != newName.value) {
-                                        val newFile = File(parent, "${newName.value}.mid")
+                                    if (initialName != newName) {
+                                        val newFile = File(parent, "${newName}.mid")
                                         val success = originalFile.renameTo(newFile)
                                         if (success) {
-                                            initialName.value = newName.value
-                                            isEditing.value = false
+                                            initialName = newName
+                                            isEditing = false
                                             onFileRename(newFile.path)
                                         }
                                     } else {
-                                        isEditing.value = false
+                                        isEditing = false
                                     }
                                 }
                             }) {
@@ -89,7 +91,7 @@ fun MidiAnalysisContent(
                             }
                         } else {
                             Text(
-                                text = initialName.value,
+                                text = initialName,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.weight(1f),
@@ -101,7 +103,7 @@ fun MidiAnalysisContent(
                                 contentDescription = "Edit",
                                 modifier = Modifier
                                     .padding(start = 8.dp)
-                                    .clickable { isEditing.value = true }
+                                    .clickable { isEditing = true }
                             )
                         }
                     }
@@ -176,11 +178,11 @@ fun MidiAnalysisContent(
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "${String.format("%.2f", note.startTimeMs / 1000.0)}s",
+                            text = "${String.format("%.2f", note.startTimeMs / 1000.0)} s",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "Duration: ${note.duration}ms",
+                            text = "Duration:${String.format("%.2f", note.duration / 1000.0)} s",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

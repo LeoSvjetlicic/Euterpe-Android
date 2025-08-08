@@ -95,6 +95,10 @@ fun CameraContent(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
+    val previewView = remember { PreviewView(context) }
+
     val cropLauncher = rememberLauncherForActivityResult(CropImageContract()) { result ->
         if (result.isSuccessful && result.uriContent != null) {
             val croppedUri = result.uriContent!!
@@ -122,10 +126,6 @@ fun CameraContent(
             Log.e("Crop", "Crop failed: ${result.error}")
         }
     }
-
-
-    var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
-    val previewView = remember { PreviewView(context) }
 
     // Initialize camera
     LaunchedEffect(Unit) {

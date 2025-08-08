@@ -13,7 +13,7 @@ import java.io.File
 
 class CameraViewModel(
     private val repository: MusicSnippetRemoteRepository,
-    private val mediaPlayerHelper: MediaPlayerHelper
+    private val mediaPlayerHelper: MediaPlayerHelper,
 ) : ViewModel() {
 
     private val _uploadState = MutableStateFlow(UploadState())
